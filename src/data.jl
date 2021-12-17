@@ -3,7 +3,7 @@ using SciMLBase, EllipsisNotation
 """
     NODEDataloader{T,N} <: AbstractNODEDataloader{T,N}
 
-Struct containing batched data for sequence learning of ODEs. Can be indexed and interated over.
+Struct containing batched data for sequence learning of ODEs. Can be indexed and interated over. Each batch returns a tuple (t, data(t)).
 
 # Inititilized with
 
@@ -41,7 +41,7 @@ end
 
 function Base.getindex(iter::NODEDataloader{T,N}, i::Integer) where {T,N}
     @assert 0 < i <= iter.N
-    return (iter.t[i:i+iter.N_length] ,iter.data[..,i:i+iter.N_length])
+    return (iter.t[i:i+iter.N_length-1] ,iter.data[..,i:i+iter.N_length-1])
 end
 
 function Base.iterate(iter::AbstractNODEDataloader, state=1)

@@ -13,12 +13,18 @@ using OrdinaryDiffEq
     # interpolate
     data = NODEDataloader(sol, 20, dt=0.2)
 
+    @test size(data[1][2])[end] == 20
+    @test size(data[1][2])[end] == 20
+    @test data[1][1] == 0:0.2:3.8
     @test data[1][2][2:end] == data[2][2][1:end-1]
     @test data[end-1][2][2:end] == data[end][2][1:end-1]
 
     # original data
     data = NODEDataloader(sol, 10)
 
+    @test size(data[1][2])[end] == 10
+    @test data[1][1] == sol.t[1:10]
+    @test data[1][2] == Array(sol)[1:10]
     @test data[1][2][2:end] == data[2][2][1:end-1]
     @test data[end-1][2][2:end] == data[end][2][1:end-1]
 
