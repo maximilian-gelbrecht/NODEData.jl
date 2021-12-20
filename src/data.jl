@@ -36,7 +36,7 @@ function NODEDataloader(sol::SciMLBase.AbstractTimeseriesSolution, N_length::Int
     N_t = length(t)
     N = N_t - N_length
 
-    NODEDataloader(togpu(data), togpu(t), N, N_length)
+    NODEDataloader(togpu(data), t, N, N_length)
 end
 
 function Base.getindex(iter::NODEDataloader{T,N}, i::Integer) where {T,N}
