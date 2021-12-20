@@ -53,7 +53,7 @@ function Base.iterate(iter::AbstractNODEDataloader, state=1)
 end
 
 Base.length(iter::AbstractNODEDataloader) = iter.N
-Base.eltype(iter::AbstractNODEDataloader) = Array{typeof(iter.data),1}
+Base.eltype(iter::AbstractNODEDataloader) = eltype(iter.data)
 
 Base.firstindex(iter::AbstractNODEDataloader) = 1
 Base.lastindex(iter::AbstractNODEDataloader) = iter.N
