@@ -12,6 +12,13 @@ Struct containing batched data for sequence learning of ODEs. Can be indexed and
 * `sol`: DE solution
 * `N_length`: length of each batch
 * `dt`: time increment that `sol` is interpolated at. If `nothing` then the `sol.t` is used as the time steps of the data
+
+    NODEDataloader(data::AbstractArray{T,N}, t::AbstractArray{T,1}, N_length::Integer)
+
+* `data`:: Data that is already in N_dim_1 x ... x N_t format
+* `t`: time axis
+* `N_length`: length of each batch 
+
 """
 struct NODEDataloader{T,N} <: AbstractNODEDataloader{T,N}
     data::AbstractArray{T,N}
@@ -38,6 +45,8 @@ function NODEDataloader(sol::SciMLBase.AbstractTimeseriesSolution, N_length::Int
 
     NODEDataloader(togpu(data), t, N, N_length)
 end
+
+NODEDataloader(data::AbstractArray{T,N}, t::AbstractArray{T,1}, N_length::Integer) where {T,N} = NODEDataloader(togpu(data), t, length(t) - N_length, N_length)
 
 function Base.getindex(iter::NODEDataloader{T,N}, i::Integer) where {T,N}
     @assert 0 < i <= iter.N
