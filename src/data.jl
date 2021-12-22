@@ -5,19 +5,20 @@ using SciMLBase, EllipsisNotation
 
 Struct containing batched data for sequence learning of ODEs. Can be indexed and interated over. Each batch returns a tuple (t, data(t)).
 
-# Inititilized with
+# Initialized with
 
-    NODEData(sol::SciMLBase.AbstractTimeseriesSolution, N_length::Integer; dt=nothing)
+    NODEData(sol::SciMLBase.AbstractTimeseriesSolution, N_length::Integer; dt=nothing, valid_set=nothing)
 
 * `sol`: DE solution
 * `N_length`: length of each batch
 * `dt`: time increment that `sol` is interpolated at. If `nothing` then the `sol.t` is used as the time steps of the data
+* `valid_set` if valid_set ∈ [0,1] splits the data into a train and valid set with `valid_set` of the share of the data belonging to the valid_set.
 
     NODEDataloader(data::AbstractArray{T,N}, t::AbstractArray{T,1}, N_length::Integer)
 
 * `data`:: Data that is already in N_dim_1 x ... x N_t format
 * `t`: time axis
-* `N_length`: length of each batch 
+* `N_length`: length of each batch
 
 """
 struct NODEDataloader{T,N} <: AbstractNODEDataloader{T,N}
@@ -27,7 +28,7 @@ struct NODEDataloader{T,N} <: AbstractNODEDataloader{T,N}
     N_length::Integer
 end
 
-function NODEDataloader(sol::SciMLBase.AbstractTimeseriesSolution, N_length::Integer; dt=nothing)
+function NODEDataloader(sol::SciMLBase.AbstractTimeseriesSolution, N_length::Integer; dt=nothing, valid_set=nothing)
 
     if isnothing(dt)
         data = Array(sol)
@@ -40,10 +41,20 @@ function NODEDataloader(sol::SciMLBase.AbstractTimeseriesSolution, N_length::Int
         end
     end
 
-    N_t = length(t)
-    N = N_t - N_length
+    if isnothing(valid_set)
+        @assert 0<valid_set<1
+        N_t = length(t)
+        N = N_t - N_length
 
-    NODEDataloader(togpu(data), t, N, N_length)
+        return NODEDataloader(togpu(data), t, N, N_length)
+    else
+
+        N_t = length(t)
+        N_t_valid = Int(floor(valid_set*N_t))
+        N_t_train = N_t - N_t_valid
+
+        return NODEDataloader(togpu(data[..,1:N_t_train]), t[1:N_t_train], N_t_train - N_length, N_length), NODEDataloader(togpu(data[..,N_t_train+1:end]), t[N_t_train+1:end], N_t_valid - N_length, N_length)
+    end
 end
 
 NODEDataloader(data::AbstractArray{T,N}, t::AbstractArray{T,1}, N_length::Integer) where {T,N} = NODEDataloader(togpu(data), t, length(t) - N_length, N_length)
