@@ -19,6 +19,12 @@ using OrdinaryDiffEq
     @test data[1][2][2:end] == data[2][2][1:end-1]
     @test data[end-1][2][2:end] == data[end][2][1:end-1]
 
+
+    # valid set
+
+    train, valid = NODEDataloader(sol, 20, dt=0.2, valid_set=0.2)
+
+
     # original data
     data = NODEDataloader(sol, 10)
 
@@ -27,5 +33,7 @@ using OrdinaryDiffEq
     @test data[1][2] == Array(sol)[1:10]
     @test data[1][2][2:end] == data[2][2][1:end-1]
     @test data[end-1][2][2:end] == data[end][2][1:end-1]
+
+
 
 end
