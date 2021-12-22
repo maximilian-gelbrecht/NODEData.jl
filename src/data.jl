@@ -42,17 +42,19 @@ function NODEDataloader(sol::SciMLBase.AbstractTimeseriesSolution, N_length::Int
     end
 
     if isnothing(valid_set)
-        @assert 0<valid_set<1
         N_t = length(t)
         N = N_t - N_length
 
         return NODEDataloader(togpu(data), t, N, N_length)
     else
+        @assert 0<valid_set<1
 
         N_t = length(t)
         N_t_valid = Int(floor(valid_set*N_t))
         N_t_train = N_t - N_t_valid
-
+        println(N_t)
+        println(N_t_valid)
+        println(size(data))
         return NODEDataloader(togpu(data[..,1:N_t_train]), t[1:N_t_train], N_t_train - N_length, N_length), NODEDataloader(togpu(data[..,N_t_train+1:end]), t[N_t_train+1:end], N_t_valid - N_length, N_length)
     end
 end
