@@ -31,11 +31,13 @@ end
 function NODEDataloader(sol::SciMLBase.AbstractTimeseriesSolution, N_length::Integer; dt=nothing, valid_set=nothing)
 
     if isnothing(dt)
-        data = Array(sol)
+        data = DeviceArray(sol)
         t = sol.t
     else
         t = sol.t[1]:dt:sol.t[end]
-        data = zeros(eltype(sol(0.)), size(sol(0.))..., length(t))
+
+        data = cuda_used[] ? CUDA.zeros(eltype(sol(0.)), size(sol(0.))..., length(t)) : zeros(eltype(sol(0.)), size(sol(0.))..., length(t))
+
         for (i,it) ∈ enumerate(t)
             data[..,i] = sol(it)
         end
@@ -45,15 +47,15 @@ function NODEDataloader(sol::SciMLBase.AbstractTimeseriesSolution, N_length::Int
         N_t = length(t)
         N = N_t - N_length
 
-        return NODEDataloader(togpu(data), t, N, N_length)
+        return NODEDataloader(DeviceArray(data), t, N, N_length)
     else
         @assert 0<valid_set<1
 
         N_t = length(t)
         N_t_valid = Int(floor(valid_set*N_t))
         N_t_train = N_t - N_t_valid
-    
-        return NODEDataloader(togpu(data[..,1:N_t_train]), t[1:N_t_train], N_t_train - N_length, N_length), NODEDataloader(togpu(data[..,N_t_train+1:N_t]), t[N_t_train+1:N_t], N_t_valid - N_length, N_length)
+
+        return NODEDataloader(DeviceArray(data[..,1:N_t_train]), t[1:N_t_train], N_t_train - N_length, N_length), NODEDataloader(DeviceArray(data[..,N_t_train+1:N_t]), t[N_t_train+1:N_t], N_t_valid - N_length, N_length)
     end
 end
 

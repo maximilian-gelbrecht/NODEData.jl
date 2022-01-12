@@ -8,7 +8,7 @@ using CUDA
 function __init__() # automatically called at runtime to set cuda_used
     cuda_used[] = CUDA.functional()
 end
-togpu(x::AbstractArray) = cuda_used[] ? CuArray(x) : x
+DeviceArray(x::AbstractArray) = cuda_used[] ? CuArray(x) : Array(x)
 
 abstract type AbstractNODEDataloader{T,N} end
 
