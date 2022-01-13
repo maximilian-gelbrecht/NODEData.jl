@@ -59,7 +59,7 @@ function NODEDataloader(sol::SciMLBase.AbstractTimeseriesSolution, N_length::Int
     end
 end
 
-NODEDataloader(data::AbstractArray{T,N}, t::AbstractArray{T,1}, N_length::Integer) where {T,N} = NODEDataloader(togpu(data), t, length(t) - N_length, N_length)
+NODEDataloader(data::AbstractArray{T,N}, t::AbstractArray{T,1}, N_length::Integer) where {T,N} = NODEDataloader(DeviceArray(data), t, length(t) - N_length, N_length)
 
 function Base.getindex(iter::NODEDataloader{T,N}, i::Integer) where {T,N}
     @assert 0 < i <= iter.N
