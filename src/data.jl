@@ -21,9 +21,9 @@ Struct containing batched data for sequence learning of ODEs. Can be indexed and
 * `N_length`: length of each batch
 
 """
-struct NODEDataloader{T,N} <: AbstractNODEDataloader{T,N}
+struct NODEDataloader{T,U,N} <: AbstractNODEDataloader{T,U,N}
     data::AbstractArray{T,N}
-    t::AbstractArray{T,1}
+    t::AbstractArray{U,1}
     N::Integer
     N_length::Integer
 end

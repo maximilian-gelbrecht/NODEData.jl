@@ -10,7 +10,7 @@ function __init__() # automatically called at runtime to set cuda_used
 end
 DeviceArray(x::AbstractArray) = cuda_used[] ? CuArray(x) : Array(x)
 
-abstract type AbstractNODEDataloader{T,N} end
+abstract type AbstractNODEDataloader{T,U,N} end
 
 include("data.jl")
 
