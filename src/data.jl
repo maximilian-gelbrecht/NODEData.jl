@@ -59,9 +59,9 @@ function NODEDataloader(sol::SciMLBase.AbstractTimeseriesSolution, N_length::Int
     end
 end
 
-NODEDataloader(data::AbstractArray{T,N}, t::AbstractArray{T,1}, N_length::Integer) where {T,N} = NODEDataloader(DeviceArray(data), t, length(t) - N_length, N_length)
+NODEDataloader(data::AbstractArray{T,N}, t::AbstractArray{U,1}, N_length::Integer) where {T,U,N} = NODEDataloader(DeviceArray(data), t, length(t) - N_length, N_length)
 
-function Base.getindex(iter::NODEDataloader{T,N}, i::Integer) where {T,N}
+function Base.getindex(iter::NODEDataloader{T,U,N}, i::Integer) where {T,U,N}
     @assert 0 < i <= iter.N
     return (iter.t[i:i+iter.N_length-1] ,iter.data[..,i:i+iter.N_length-1])
 end
@@ -79,4 +79,4 @@ Base.eltype(iter::AbstractNODEDataloader) = eltype(iter.data)
 
 Base.firstindex(iter::AbstractNODEDataloader) = 1
 Base.lastindex(iter::AbstractNODEDataloader) = iter.N
-Base.show(io::IO,seq::NODEDataloader{T,N}) where {T,N} = print(io, "NODEData{",T,",",N,"} with ",seq.N," batches with length ",seq.N_length)
+Base.show(io::IO,seq::NODEDataloader{T,U,N}) where {T,U,N} = print(io, "NODEData{",T,",",N,"} with ",seq.N," batches with length ",seq.N_length)
