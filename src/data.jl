@@ -34,9 +34,9 @@ function NODEDataloader(sol::SciMLBase.AbstractTimeseriesSolution, N_length::Int
         data = DeviceArray(sol)
         t = sol.t
     else
-        t = sol.t[1]:dt:sol.t[end]
+        t = sol.t[1]:eltype(sol)(dt):sol.t[end]
 
-        data = cuda_used[] ? CUDA.zeros(eltype(sol(0.)), size(sol(0.))..., length(t)) : zeros(eltype(sol(0.)), size(sol(0.))..., length(t))
+        data = cuda_used[] ? CUDA.zeros(eltype(sol), size(sol(0.))..., length(t)) : zeros(eltype(sol), size(sol(0.))..., length(t))
 
         for (i,it) ∈ enumerate(t)
             data[..,i] = sol(it)
