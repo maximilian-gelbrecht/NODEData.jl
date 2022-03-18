@@ -48,7 +48,7 @@ function LargeNODEDataloader(sol, N_batch, N_length, name, base_path=""; dt=noth
     end
 end
 
-function Base.getindex(iter::LargeNODEDataloader, i::Integer) where {T,U,N}
+function Base.getindex(iter::LargeNODEDataloader, i::Integer) 
     @assert 0 < i <= iter.N
 
     save_name = string(iter.base_path, "temp-data/",iter.name, "-",i,".jld2")

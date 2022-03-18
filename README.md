@@ -24,3 +24,7 @@ data = NODEDataloader(sol, 20)
 ```
 
 In these examples each batch is `N_length=20` elements long, i.e `data[i]`, is a tuple with `(t, data(t))` each with 20 elements. `data[1]` are the first `N_length` elements, `data[2]` are the `2:N_length+1` elements and so on.
+
+### Larger than RAM data
+
+The pacakge also provides a wrapper around `NODEDataloader` for larger than RAM datasets. The data is split into temporary files on the harddrive and can be easiliy loaded. See `LargeNODEDataloader`
