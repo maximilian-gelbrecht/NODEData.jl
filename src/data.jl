@@ -76,3 +76,13 @@ Base.eltype(iter::AbstractNODEDataloader) = eltype(iter.data)
 Base.firstindex(iter::AbstractNODEDataloader) = 1
 Base.lastindex(iter::AbstractNODEDataloader) = iter.N
 Base.show(io::IO,seq::NODEDataloader{T,U,N}) where {T,U,N} = print(io, "NODEData{",T,",",N,"} with ",seq.N," batches with length ",seq.N_length)
+
+"""
+    get_trajectory(data::NODEDataloader, N)
+
+Returns a (t, x(t)) tuple of length `N`.
+"""
+function get_trajectory(data::NODEDataloader, N)
+    ind = 1:N 
+    (data.t[ind], data.data[..,ind])
+end 
