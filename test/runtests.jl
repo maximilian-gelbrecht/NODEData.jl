@@ -2,7 +2,7 @@ using NODEData
 using Test
 using OrdinaryDiffEq
 
-@testset "NODEData.jl" begin
+@testset "NODEDataloader" begin
 
     f(u,p,t) = 1.01*u
     u0 = 1/2
@@ -36,4 +36,28 @@ using OrdinaryDiffEq
 
 
 
+end
+
+# TBD: better tests
+@testset "LargeNODEDataloader" begin
+
+    f(u,p,t) = 1.01*u
+    u0 = 1/2
+    tspan = (0.0,50.0)
+    prob = ODEProblem(f,u0,tspan)
+    sol = solve(prob, Tsit5(), reltol=1e-8, abstol=1e-8)
+
+    # interpolate
+    data = LargeNODEDataloader(sol, 10, 5, "test", dt=0.2)
+
+    @test (data[1])[1][1] == 0.0:0.2:0.8
+
+
+    delete(data)
+
+    data, valid = LargeNODEDataloader(sol, 10, 5, "test", dt=0.2, valid_set=true)
+
+    @test typeof(valid[1][2]) <: AbstractArray
+
+    delete(data)
 end

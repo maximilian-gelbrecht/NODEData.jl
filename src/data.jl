@@ -28,19 +28,14 @@ struct NODEDataloader{T,U,N} <: AbstractNODEDataloader{T,U,N}
     N_length::Integer
 end
 
-function NODEDataloader(sol::SciMLBase.AbstractTimeseriesSolution, N_length::Integer; dt=nothing, valid_set=nothing)
+function NODEDataloader(sol::Union{SciMLBase.AbstractTimeseriesSolution, SciMLBase.AbstractDiffEqArray}, N_length::Integer; dt=nothing, valid_set=nothing)
 
     if isnothing(dt)
         data = DeviceArray(sol)
         t = sol.t
     else
         t = sol.t[1]:eltype(sol)(dt):sol.t[end]
-
-        data = cuda_used[] ? CUDA.zeros(eltype(sol), size(sol(0.))..., length(t)) : zeros(eltype(sol), size(sol(0.))..., length(t))
-
-        for (i,it) ∈ enumerate(t)
-            data[..,i] = sol(it)
-        end
+        data = DeviceArray(sol(t))
     end
 
     if isnothing(valid_set)

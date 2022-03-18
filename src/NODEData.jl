@@ -13,7 +13,8 @@ DeviceArray(x::AbstractArray) = cuda_used[] ? CuArray(x) : Array(x)
 abstract type AbstractNODEDataloader{T,U,N} end
 
 include("data.jl")
+include("largedata.jl")
 
-export NODEDataloader
+export NODEDataloader, LargeNODEDataloader, delete
 
 end
