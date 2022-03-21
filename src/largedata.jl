@@ -28,7 +28,8 @@ function LargeNODEDataloader(sol, N_batch, N_length, name, base_path=""; dt=noth
 
     for i=1:N_batch
 
-        train = NODEDataloader(sol(t[(i-1)*N_t_batch+1:i*N_t_batch]), N_length)
+        # to be safe, it is always saved on cpu mem
+        train = cpu(NODEDataloader(sol(t[(i-1)*N_t_batch+1:i*N_t_batch]), N_length))
 
         if !(isnothing(valid_set)) && i==N_batch
             global valid = train 
@@ -54,7 +55,9 @@ function Base.getindex(iter::LargeNODEDataloader, i::Integer)
     save_name = string(iter.base_path, "temp-data/",iter.name, "-",i,".jld2")
 
     @load save_name train
-    return train
+
+    # if a gpu is available, it is used, can be switched off by toggling gpuoff()
+    return gpu(train)
 end
 
 function Base.iterate(iter::LargeNODEDataloader, state=1)

@@ -86,3 +86,6 @@ function get_trajectory(data::NODEDataloader, N)
     ind = 1:N 
     (data.t[ind], data.data[..,ind])
 end 
+
+cpu(data::NODEDataloader) = NODEDataloader(Array(data.data), data.t, data.N, data.N_length)
+gpu(data::NODEDataloader) = NODEDataloader(DeviceArray(data.data), data.t, data.N, data.N_length)
