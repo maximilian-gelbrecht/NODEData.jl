@@ -28,12 +28,13 @@ function LargeNODEDataloader(sol, N_batch, N_length, name, base_path=""; dt=noth
 
     for i=1:N_batch
 
-        # to be safe, it is always saved on cpu mem
-        train = cpu(NODEDataloader(sol(t[(i-1)*N_t_batch+1:i*N_t_batch]), N_length))
+        train = NODEDataloader(sol(t[(i-1)*N_t_batch+1:i*N_t_batch]), N_length)
 
         if !(isnothing(valid_set)) && i==N_batch
             global valid = train 
         else 
+            # to be safe, it is always saved on cpu mem
+            train = cpu(train)
             save_name = string(base_path, "temp-data/",name, "-",i,".jld2")
             @save save_name train
         end
