@@ -74,6 +74,6 @@ Base.eltype(iter::LargeNODEDataloader) = eltype(iter.data)
 
 Base.firstindex(iter::LargeNODEDataloader) = 1
 Base.lastindex(iter::LargeNODEDataloader) = iter.N
-Base.show(io::IO,seq::LargeNODEDataloader) = print(io, "LargeNODEDataloader with files saved at ",seq.basename,"/tmp-data")
+Base.show(io::IO,seq::LargeNODEDataloader) = print(io, "LargeNODEDataloader with files saved at ",seq.base_path,"/tmp-data")
 
 delete(data::LargeNODEDataloader) = rm(string(data.base_path,"temp-data"), recursive=true)
