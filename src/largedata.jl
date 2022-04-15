@@ -19,12 +19,10 @@ function LargeNODEDataloader(sol, N_batch, N_length, name, base_path=""; dt=noth
 
     N_t = length(t)
     N_t_batch = Int(floor(N_t / N_batch))
+ 
+    mkpath("temp-data")
 
-    try 
-        mkdir("temp-data")
-    catch 
-        nothing 
-    end 
+    rnd_name = rand(1:100000) # so that multiple instances running in parallel don't interfere
 
     for i=1:N_batch
 
@@ -35,7 +33,7 @@ function LargeNODEDataloader(sol, N_batch, N_length, name, base_path=""; dt=noth
         else 
             # to be safe, it is always saved on cpu mem
             train = cpu(train)
-            save_name = string(base_path, "temp-data/",name, "-",i,".jld2")
+            save_name = string(base_path, "temp-data/",name, "-",rnd_name,"-",i,".jld2")
             @save save_name train
         end
 
