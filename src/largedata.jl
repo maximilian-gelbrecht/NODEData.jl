@@ -9,7 +9,7 @@ Impelements an array of NODEDataloader that are too large for the RAM and are th
 """
 struct LargeNODEDataloader
     name 
-    base_path 
+    path 
     N 
 end
 
@@ -19,10 +19,12 @@ function LargeNODEDataloader(sol, N_batch, N_length, name, base_path=""; dt=noth
 
     N_t = length(t)
     N_t_batch = Int(floor(N_t / N_batch))
- 
-    mkpath("temp-data")
-
+    
     rnd_name = rand(1:100000) # so that multiple instances running in parallel don't interfere
+
+    path = string(base_path,rnd_name,"-",name,"/")
+    mkpath(path)
+
 
     for i=1:N_batch
 
@@ -33,7 +35,7 @@ function LargeNODEDataloader(sol, N_batch, N_length, name, base_path=""; dt=noth
         else 
             # to be safe, it is always saved on cpu mem
             train = cpu(train)
-            save_name = string(base_path, "temp-data/",name, "-",rnd_name,"-",i,".jld2")
+            save_name = string(path,name,"-",i,".jld2")
             @save save_name train
         end
 
@@ -42,16 +44,16 @@ function LargeNODEDataloader(sol, N_batch, N_length, name, base_path=""; dt=noth
     N_batch = !(isnothing(valid_set)) ? N_batch - 1 : N_batch
 
     if !(isnothing(valid_set))
-        return LargeNODEDataloader(name, base_path, N_batch), valid 
+        return LargeNODEDataloader(name, path, N_batch), valid 
     else 
-        return LargeNODEDataloader(name, base_path, N_batch)
+        return LargeNODEDataloader(name, path, N_batch)
     end
 end
 
 function Base.getindex(iter::LargeNODEDataloader, i::Integer) 
     @assert 0 < i <= iter.N
 
-    save_name = string(iter.base_path, "temp-data/",iter.name, "-",i,".jld2")
+    save_name = string(iter.path, iter.name, "-", i, ".jld2")
 
     @load save_name train
 
@@ -72,6 +74,6 @@ Base.eltype(iter::LargeNODEDataloader) = eltype(iter.data)
 
 Base.firstindex(iter::LargeNODEDataloader) = 1
 Base.lastindex(iter::LargeNODEDataloader) = iter.N
-Base.show(io::IO,seq::LargeNODEDataloader) = print(io, "LargeNODEDataloader with files saved at ",seq.base_path,"/tmp-data")
+Base.show(io::IO,seq::LargeNODEDataloader) = print(io, "LargeNODEDataloader with files saved at ",seq.path,"/tmp-data")
 
-delete(data::LargeNODEDataloader) = rm(string(data.base_path,"temp-data"), recursive=true)
+delete(data::LargeNODEDataloader) = rm(data.path, recursive=true)
