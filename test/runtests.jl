@@ -38,7 +38,6 @@ using OrdinaryDiffEq
 
 end
 
-# TBD: better tests
 @testset "LargeNODEDataloader" begin
 
     f(u,p,t) = 1.01*u
