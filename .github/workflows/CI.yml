@@ -50,5 +50,5 @@ jobs:
           julia --project=docs -e '
             using Documenter: DocMeta, doctest
             using NODEData
-            DocMeta.setdocmeta!(ChaoticNDETools, :DocTestSetup, :(using NODEData); recursive=true)
+            DocMeta.setdocmeta!(NODEData, :DocTestSetup, :(using NODEData); recursive=true)
             doctest(NODEData)'
