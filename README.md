@@ -1,5 +1,9 @@
 # NODEData
 
+[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://maximilian-gelbrecht.github.io/NODEData.jl/dev/)
+[![Build Status](https://github.com/maximilian-gelbrecht/NODEData.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/maximilian-gelbrecht/NODEData.jl/actions/workflows/CI.yml?query=branch%3Amain)
+
+
 Small helper package that provides a struct for sequence learning with Neural ODEs. It behaves roughly similar to Flux' Dataloader but the individual samples overlap, so that it is suitable for learning sequences.
 
 ## Usage
