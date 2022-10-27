@@ -54,7 +54,20 @@ function NODEDataloader(sol::Union{SciMLBase.AbstractTimeseriesSolution, SciMLBa
     end
 end
 
-NODEDataloader(data::AbstractArray{T,N}, t::AbstractArray{U,1}, N_length::Integer) where {T,U,N} = NODEDataloader(DeviceArray(data), t, length(t) - N_length, N_length)
+function NODEDataloader(data::AbstractArray{T,N}, t::AbstractArray{U,1}, N_length::Integer; valid_set=nothing) where {T,U,N} 
+    @assert size(data)[end] == length(t) "Length of data and t should be equal"
+
+    if isnothing(valid_set)
+        return NODEDataloader(DeviceArray(data), t, length(t) - N_length, N_length)
+    else 
+        N_t = length(t)
+        N_train = Int(floor(0.8 * N_t))
+        N_valid = N_t - N_train 
+
+        return NODEDataloader(DeviceArray(data[..,1:N_train]), t[1:N_train], N_train - N_length, N_length), NODEDataloader(DeviceArray(data[..,N_train+1:end]), t[N_train+1:end], N_valid - N_length, N_length)
+    end
+end 
+
 NODEDataloader(data::NODEDataloader, N_length::Integer) = NODEDataloader(data.data, data.t, N_length)
 
 function Base.getindex(iter::NODEDataloader{T,U,N}, i::Integer) where {T,U,N}
