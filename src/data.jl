@@ -44,7 +44,7 @@ function NODEDataloader(sol::Union{SciMLBase.AbstractTimeseriesSolution, SciMLBa
 
         return NODEDataloader(DeviceArray(data), t, N, N_length)
     else
-        @assert 0<valid_set<1
+        @assert 0 <= valid_set < 1 "Valid_set should be ∈ [0,1]"
 
         N_t = length(t)
         N_t_valid = Int(floor(valid_set*N_t))
@@ -56,11 +56,12 @@ end
 
 function NODEDataloader(data::AbstractArray{T,N}, t::AbstractArray{U,1}, N_length::Integer; valid_set=nothing) where {T,U,N} 
     @assert size(data)[end] == length(t) "Length of data and t should be equal"
-    @assert 0 <= valid_set < 1 "Valid_set should be ∈ [0,1]"
 
     if isnothing(valid_set)
         return NODEDataloader(DeviceArray(data), t, length(t) - N_length, N_length)
     else 
+        @assert 0 <= valid_set < 1 "Valid_set should be ∈ [0,1]"
+
         N_t = length(t)
         N_t_valid = Int(floor(valid_set*N_t))
         N_t_train = N_t - N_t_valid
