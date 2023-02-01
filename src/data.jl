@@ -28,8 +28,14 @@ struct NODEDataloader{T,U,N} <: AbstractNODEDataloader{T,U,N}
     N_length::Integer
 end
 
-function NODEDataloader(sol::Union{SciMLBase.AbstractTimeseriesSolution, SciMLBase.AbstractDiffEqArray}, N_length::Integer; dt=nothing, valid_set=nothing)
+function NODEDataloader(sol::Union{SciMLBase.AbstractTimeseriesSolution, SciMLBase.AbstractDiffEqArray}, N_length::Integer; dt=nothing, valid_set=nothing, GPU=false)
 
+    if GPU
+        gpuoff()
+    else
+        gpuon()
+    end
+    
     if isnothing(dt)
         data = DeviceArray(sol)
         t = sol.t
@@ -54,8 +60,14 @@ function NODEDataloader(sol::Union{SciMLBase.AbstractTimeseriesSolution, SciMLBa
     end
 end
 
-function NODEDataloader(data::AbstractArray{T,N}, t::AbstractArray{U,1}, N_length::Integer; valid_set=nothing) where {T,U,N} 
+function NODEDataloader(data::AbstractArray{T,N}, t::AbstractArray{U,1}, N_length::Integer; valid_set=nothing, GPU=false) where {T,U,N} 
     @assert size(data)[end] == length(t) "Length of data and t should be equal"
+    
+    if GPU
+        gpuoff()
+    else
+        gpuon()
+    end
 
     if isnothing(valid_set)
         return NODEDataloader(DeviceArray(data), t, length(t) - N_length, N_length)

@@ -6,7 +6,7 @@ global const cuda_used = Ref(false)
 using CUDA
 
 function __init__() # automatically called at runtime to set cuda_used
-    cuda_used[] = CUDA.functional()
+    cuda_used[] = false
 end
 DeviceArray(x::AbstractArray) = cuda_used[] ? CuArray(x) : Array(x)
 
