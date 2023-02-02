@@ -7,12 +7,13 @@ Struct containing batched data for sequence learning of ODEs. Can be indexed and
 
 # Initialized with
 
-    NODEData(sol::SciMLBase.AbstractTimeseriesSolution, N_length::Integer; dt=nothing, valid_set=nothing)
+    NODEData(sol::SciMLBase.AbstractTimeseriesSolution, N_length::Integer; dt=nothing, valid_set=nothing, GPU=nothing)
 
 * `sol`: DE solution
 * `N_length`: length of each batch
 * `dt`: time increment that `sol` is interpolated at. If `nothing` then the `sol.t` is used as the time steps of the data
 * `valid_set` if valid_set ∈ [0,1] splits the data into a train and valid set with `valid_set` of the share of the data belonging to the valid_set.
+* `GPU` if `nothing` the output is automatically chosen to be on GPU/CPU based on `sol`, if `GPU==true` or `GPU==false` the automatic choice is overwritten
 
     NODEDataloader(data::AbstractArray{T,N}, t::AbstractArray{T,1}, N_length::Integer)
 
@@ -21,21 +22,17 @@ Struct containing batched data for sequence learning of ODEs. Can be indexed and
 * `N_length`: length of each batch
 
 """
-struct NODEDataloader{T,U,N} <: AbstractNODEDataloader{T,U,N}
-    data::AbstractArray{T,N}
-    t::AbstractArray{U,1}
-    N::Integer
-    N_length::Integer
+struct NODEDataloader{T<:AbstractArray,U<:AbstractVector,N<:Integer} <: AbstractNODEDataloader{T,U,N}
+    data::T
+    t::U
+    N::N
+    N_length::N
 end
 
-function NODEDataloader(sol::Union{SciMLBase.AbstractTimeseriesSolution, SciMLBase.AbstractDiffEqArray}, N_length::Integer; dt=nothing, valid_set=nothing, GPU=false)
+function NODEDataloader(sol::Union{SciMLBase.AbstractTimeseriesSolution, SciMLBase.AbstractDiffEqArray}, N_length::Integer; dt=nothing, valid_set=nothing, GPU::Union{Bool, Nothing}=nothing)
 
-    if GPU
-        gpuoff()
-    else
-        gpuon()
-    end
-    
+    set_gpu(detect_sol_array_type(sol), GPU)
+
     if isnothing(dt)
         data = DeviceArray(sol)
         t = sol.t
@@ -44,33 +41,16 @@ function NODEDataloader(sol::Union{SciMLBase.AbstractTimeseriesSolution, SciMLBa
         data = DeviceArray(sol(t))
     end
 
-    if isnothing(valid_set)
-        N_t = length(t)
-        N = N_t - N_length
-
-        return NODEDataloader(DeviceArray(data), t, N, N_length)
-    else
-        @assert 0 <= valid_set < 1 "Valid_set should be ∈ [0,1]"
-
-        N_t = length(t)
-        N_t_valid = Int(floor(valid_set*N_t))
-        N_t_train = N_t - N_t_valid
-
-        return NODEDataloader(DeviceArray(data[..,1:N_t_train]), t[1:N_t_train], N_t_train - N_length, N_length), NODEDataloader(DeviceArray(data[..,N_t_train+1:N_t]), t[N_t_train+1:N_t], N_t_valid - N_length, N_length)
-    end
+    NODEDataloader(data, t, N_length; valid_set=valid_set, GPU=GPU)
 end
 
-function NODEDataloader(data::AbstractArray{T,N}, t::AbstractArray{U,1}, N_length::Integer; valid_set=nothing, GPU=false) where {T,U,N} 
+function NODEDataloader(data::AbstractArray{T,N}, t::AbstractArray{U,1}, N_length::Integer; valid_set=nothing, GPU::Union{Bool, Nothing}=nothing) where {T,U,N} 
     @assert size(data)[end] == length(t) "Length of data and t should be equal"
     
-    if GPU
-        gpuoff()
-    else
-        gpuon()
-    end
+    set_gpu(typeof(data) <: CuArray ? true : false, GPU)
 
     if isnothing(valid_set)
-        return NODEDataloader(DeviceArray(data), t, length(t) - N_length, N_length)
+        return NODEDataloader(DeviceArray(data), DeviceArray(t), length(t) - N_length, N_length)
     else 
         @assert 0 <= valid_set < 1 "Valid_set should be ∈ [0,1]"
 
@@ -78,7 +58,7 @@ function NODEDataloader(data::AbstractArray{T,N}, t::AbstractArray{U,1}, N_lengt
         N_t_valid = Int(floor(valid_set*N_t))
         N_t_train = N_t - N_t_valid
 
-        return NODEDataloader(DeviceArray(data[..,1:N_t_train]), t[1:N_t_train], N_t_train - N_length, N_length), NODEDataloader(DeviceArray(data[..,N_t_train+1:N_t]), t[N_t_train+1:N_t], N_t_valid - N_length, N_length)
+        return NODEDataloader(DeviceArray(data[..,1:N_t_train]), DeviceArray(t[1:N_t_train]), N_t_train - N_length, N_length), NODEDataloader(DeviceArray(data[..,N_t_train+1:N_t]), DeviceArray(t[N_t_train+1:N_t]), N_t_valid - N_length, N_length)
     end
 end 
 
@@ -116,3 +96,39 @@ end
 
 cpu(data::NODEDataloader) = NODEDataloader(Array(data.data), data.t, data.N, data.N_length)
 gpu(data::NODEDataloader) = NODEDataloader(DeviceArray(data.data), data.t, data.N, data.N_length)
+
+function set_gpu(autodetect_GPU::Bool, manual_GPU::Union{Bool, Nothing}=nothing)
+    if !isnothing(manual_GPU)
+        GPU = manual_GPU
+    else 
+        GPU = autodetect_GPU
+    end 
+    if GPU 
+        gpuon()
+    else
+        gpuoff()
+    end 
+end 
+
+""" 
+    detect_sol_array_type(sol::Union{SciMLBase.AbstractTimeseriesSolution, SciMLBase.AbstractDiffEqArray})
+
+Returns `true` if the solution is on a GPU, `false` if it is not CPU. 
+"""
+function detect_sol_array_type(sol::SciMLBase.AbstractTimeseriesSolution) 
+    @assert length(sol.t) >= 2 "Solution has to be longer than two timesteps to determine the array type"
+    detect_sol_array_type(sol(sol.t[1:2]))
+end 
+
+function detect_sol_array_type(sol::SciMLBase.AbstractDiffEqArray)    
+    arraytype = typeof(sol.u)
+
+    if arraytype <: CuArray 
+        return true 
+    elseif arraytype <: Array 
+        return false 
+    else 
+        error("Can't determine array type of solution")
+    end 
+end 
+
