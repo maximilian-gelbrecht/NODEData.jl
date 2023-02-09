@@ -11,14 +11,6 @@ OrdinaryDiffEq = "1dea7af3-3e70-54e6-95c3-0bf5283fa5ed"
 SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
-[compat]
-CUDA = "3"
-JLD2 = "0.4"
-EllipsisNotation = "1"
-SciMLBase = "1"
-OrdinaryDiffEq = "6"
-julia = "1.6"
-
 [extras]
 CPUSummary = "2a0fbf3d-bb9c-48f3-b0a9-814d99fd7ab9"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
