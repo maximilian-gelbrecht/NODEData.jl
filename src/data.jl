@@ -121,7 +121,7 @@ function detect_sol_array_type(sol::SciMLBase.AbstractTimeseriesSolution)
 end 
 
 function detect_sol_array_type(sol::SciMLBase.AbstractDiffEqArray)    
-    arraytype = typeof(sol.u)
+    arraytype = typeof(sol.u[1])
 
     if arraytype <: CuArray 
         return true 
