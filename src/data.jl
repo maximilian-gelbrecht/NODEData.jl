@@ -115,19 +115,22 @@ end
 
 Returns `true` if the solution is on a GPU, `false` if it is not CPU. 
 """
-function detect_sol_array_type(sol::SciMLBase.AbstractTimeseriesSolution) 
-    @assert length(sol.t) >= 2 "Solution has to be longer than two timesteps to determine the array type"
-    detect_sol_array_type(sol(sol.t[1:2]))
-end 
-
-function detect_sol_array_type(sol::SciMLBase.AbstractDiffEqArray)    
+function detect_sol_array_type(sol::Union{SciMLBase.AbstractDiffEqArray, SciMLBase.AbstractTimeseriesSolution})    
     arraytype = typeof(sol.u[1])
 
     if arraytype <: CuArray 
         return true 
     elseif arraytype <: Array 
         return false 
-    else 
+    elseif arraytype <: Number 
+        if typeof(sol.u) <: CuArray 
+            return true 
+        elseif typeof(sol.u) <: Array 
+            return false 
+        else 
+            error("Can't determine array type of solution")
+        end 
+    else
         error("Can't determine array type of solution")
     end 
 end 
