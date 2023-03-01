@@ -120,12 +120,12 @@ function detect_sol_array_type(sol::Union{SciMLBase.AbstractDiffEqArray, SciMLBa
 
     if arraytype <: CuArray 
         return true 
-    elseif arraytype <: Array 
+    elseif arraytype <: AbstractArray 
         return false 
     elseif arraytype <: Number 
         if typeof(sol.u) <: CuArray 
             return true 
-        elseif typeof(sol.u) <: Array 
+        elseif typeof(sol.u) <: AbstractArray 
             return false 
         else 
             error("Can't determine array type of solution")
