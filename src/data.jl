@@ -35,7 +35,7 @@ function NODEDataloader(sol::Union{SciMLBase.AbstractTimeseriesSolution, SciMLBa
 
     if isnothing(dt)
         data = DeviceArray(sol)
-        t = sol.t
+        t = Array(sol.t)
     else
         t = sol.t[1]:eltype(sol)(dt):sol.t[end]
         data = DeviceArray(sol(t))
@@ -58,7 +58,7 @@ function NODEDataloader(data::AbstractArray{T,N}, t::AbstractArray{U,1}, N_lengt
         N_t_valid = Int(floor(valid_set*N_t))
         N_t_train = N_t - N_t_valid
 
-        return NODEDataloader(DeviceArray(data[..,1:N_t_train]), DeviceArray(t[1:N_t_train]), N_t_train - N_length, N_length), NODEDataloader(DeviceArray(data[..,N_t_train+1:N_t]), DeviceArray(t[N_t_train+1:N_t]), N_t_valid - N_length, N_length)
+        return NODEDataloader(DeviceArray(data[..,1:N_t_train]), Array(t[1:N_t_train]), N_t_train - N_length, N_length), NODEDataloader(DeviceArray(data[..,N_t_train+1:N_t]), DeviceArray(t[N_t_train+1:N_t]), N_t_valid - N_length, N_length)
     end
 end 
 
