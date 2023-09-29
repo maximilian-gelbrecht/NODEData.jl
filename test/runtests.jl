@@ -60,3 +60,5 @@ end
 
     delete(data)
 end
+
+include("batched.jl")

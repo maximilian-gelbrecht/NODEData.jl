@@ -9,6 +9,7 @@ function __init__() # automatically called at runtime to set cuda_used
     cuda_used[] = false
 end
 DeviceArray(x::AbstractArray) = cuda_used[] ? CuArray(x) : Array(x)
+DeviceArrayType() = cuda_used[] ? CuArray : Array
 
 """
     gpuon()
@@ -32,6 +33,7 @@ abstract type AbstractNODEDataloader{T,U,N} end
 
 include("data.jl")
 include("largedata.jl")
+include("batched.jl")
 
 export NODEDataloader, LargeNODEDataloader, delete
 
