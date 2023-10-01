@@ -35,6 +35,6 @@ include("data.jl")
 include("largedata.jl")
 include("batched.jl")
 
-export NODEDataloader, LargeNODEDataloader, delete
+export NODEDataloader, LargeNODEDataloader, delete, SingleTrajectoryBatchedOSADataloader, MultiTrajectoryBatchedNODEDataloader
 
 end
