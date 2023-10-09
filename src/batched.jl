@@ -82,7 +82,7 @@ function _prepare_singletrajectory_batched(data::AbstractArray{T,N}, t::Abstract
         @warn "Not all data points are used, N_batch is not a divisor of the length of the trajectory"
     end
 
-    dev_array_type = DeviceArrayType()
+    dev_array_type = Array # top level array as an Array, even on GPU, double check if this is really fast, using CuArray here directly is not possible
     batched_x = dev_array_type{dev_array_type{T,N+1}, 1}(undef, N_N) 
     batched_t = dev_array_type{Array{T,2}}(undef, N_N)
     
