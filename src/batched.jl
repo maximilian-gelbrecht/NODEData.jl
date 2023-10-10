@@ -107,14 +107,14 @@ end
 Base.eltype(iter::SingleTrajectoryBatchedOSADataloader) = eltype(iter.data[1])
 
 """
-    get_trajectory(data::SingleTrajectoryBatchedOSADataloader{T,U,N}, N)
+    get_trajectory(data::SingleTrajectoryBatchedOSADataloader{T,U,N}, N; N_batch=0)
 
-Returns a (t, x(t)) tuple of length `N`.
+Returns a (t, x(t)) tuple of length `N`. If `N_batch != 0` the trajectory is repeated `N_batch` along an additional batch axis. 
 """
-function get_trajectory(data::NODEData.SingleTrajectoryBatchedOSADataloader, N) 
+function get_trajectory(data::NODEData.SingleTrajectoryBatchedOSADataloader, N; N_batch::Int=0) 
     @assert N < data.N_batch * data.N
 
-    N_batch = data.N_batch
+    N_batch_data = data.N_batch
 
     x_trajectory = DeviceArrayType(){eltype(data), ndims(data.data[1])-1}(undef, size(data.data[1])[1:end-2]..., N)
     t_trajectory = Array{eltype(data), 1}(undef, N)
@@ -124,15 +124,20 @@ function get_trajectory(data::NODEData.SingleTrajectoryBatchedOSADataloader, N)
     x_trajectory[..,1] = data[1][2][..,1,1]
 
     for i=1:(N-1) 
-        i_dataloader = div(i-1, N_batch) + 1
-        i_batch = i % N_batch 
-        i_batch = i_batch == 0 ? N_batch : i_batch
+        i_dataloader = div(i-1, N_batch_data) + 1
+        i_batch = i % N_batch_data
+        i_batch = i_batch == 0 ? N_batch_data : i_batch
 
         t_trajectory[i+1] = data[i_dataloader][1][i_batch,2] 
         x_trajectory[..,i+1] = data[i_dataloader][2][..,i_batch,2]
     end 
 
-    return (t_trajectory, x_trajectory)
+    if N_batch == 0 
+        return (t_trajectory, x_trajectory)
+    else 
+        s = [size(x_trajectory)...]
+        return (permutedims(repeat(t_trajectory,1,N_batch),(2,1)), repeat(reshape(x_trajectory,s[1:end-1]...,1,s[end]),ones(Int,length(s)-1)...,N_batch,1))
+    end 
 end 
 
 cpu(data::SingleTrajectoryBatchedOSADataloader) = SingleTrajectoryBatchedOSADataloader(Array(data.data), data.t, data.N, data.N_batch)

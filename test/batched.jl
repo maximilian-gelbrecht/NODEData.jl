@@ -52,4 +52,12 @@ end
     traj = NODEData.get_trajectory(train, 10)
     @test traj[1] == 1:10 
     @test traj[2] == x[:,:,1:10] 
+
+    traj = NODEData.get_trajectory(train, 10; N_batch=2)
+    @test size(traj[1]) == (2,10)
+    @test size(traj[2]) == (5,5,2,10)
+    @test traj[1][1,:] == 1:10 
+    @test traj[1][2,:] == 1:10 
+    @test traj[2][:,:,1,:] == x[:,:,1:10] 
+    @test traj[2][:,:,2,:] == x[:,:,1:10] 
 end
