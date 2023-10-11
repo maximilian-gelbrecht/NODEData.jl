@@ -112,7 +112,7 @@ Base.eltype(iter::SingleTrajectoryBatchedOSADataloader) = eltype(iter.data[1])
 Returns a (t, x(t)) tuple of length `N`. If `N_batch != 0` the trajectory is repeated `N_batch` along an additional batch axis. 
 """
 function get_trajectory(data::NODEData.SingleTrajectoryBatchedOSADataloader, N; N_batch::Int=0) 
-    @assert N < data.N_batch * data.N
+    @assert N <= (data.N_batch * data.N) + 1
 
     N_batch_data = data.N_batch
 
@@ -142,3 +142,11 @@ end
 
 cpu(data::SingleTrajectoryBatchedOSADataloader) = SingleTrajectoryBatchedOSADataloader(Array(data.data), data.t, data.N, data.N_batch)
 gpu(data::SingleTrajectoryBatchedOSADataloader) = SingleTrajectoryBatchedOSADataloader(DeviceArray(data.data), data.t, data.N, data.N_batch)
+
+function NODEDataloader(batched_dataloader::SingleTrajectoryBatchedOSADataloader, N_length::Int)
+    trajectory = get_trajectory(batched_dataloader, batched_dataloader.N_batch*batched_dataloader.N + 1; N_batch=0)
+
+    NODEDataloader(trajectory[2], trajectory[1], N_length; valid_set=nothing)
+end 
+
+SingleTrajectoryBatchedOSADataloader(dataloader::NODEDataloader, N_batch::Int) = SingleTrajectoryBatchedOSADataloader(dataloader.data, dataloader.t, N_batch)

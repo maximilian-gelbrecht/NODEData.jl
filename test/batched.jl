@@ -60,4 +60,12 @@ end
     @test traj[1][2,:] == 1:10 
     @test traj[2][:,:,1,:] == x[:,:,1:10] 
     @test traj[2][:,:,2,:] == x[:,:,1:10] 
+
+    # conversion to non-batched dataloader back and forward 
+    single_batched = NODEDataloader(train,2)
+    recovered_batched = NODEData.SingleTrajectoryBatchedOSADataloader(single_batched, 5)
+
+    @test recovered_batched[1] == train[1]
+    @test recovered_batched[end] == train[end]
+    @test length(recovered_batched) == length(train)
 end
