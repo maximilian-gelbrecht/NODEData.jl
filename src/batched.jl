@@ -149,4 +149,11 @@ function NODEDataloader(batched_dataloader::SingleTrajectoryBatchedOSADataloader
     NODEDataloader(trajectory[2], trajectory[1], N_length; valid_set=nothing)
 end 
 
+function NODEDataloader_insertdim(batched_dataloader::SingleTrajectoryBatchedOSADataloader, N_length::Int)
+    trajectory = get_trajectory(batched_dataloader, batched_dataloader.N_batch*batched_dataloader.N + 1; N_batch=0)
+    size_t = size(trajectory[2])
+
+    NODEDataloader(reshape(trajectory[2],size_t[1:end-1]...,1,size_t[end]), trajectory[1], N_length; valid_set=nothing)
+end 
+
 SingleTrajectoryBatchedOSADataloader(dataloader::NODEDataloader, N_batch::Int) = SingleTrajectoryBatchedOSADataloader(dataloader.data, dataloader.t, N_batch)
