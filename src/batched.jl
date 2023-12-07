@@ -143,12 +143,22 @@ end
 cpu(data::SingleTrajectoryBatchedOSADataloader) = SingleTrajectoryBatchedOSADataloader(Array(data.data), data.t, data.N, data.N_batch)
 gpu(data::SingleTrajectoryBatchedOSADataloader) = SingleTrajectoryBatchedOSADataloader(DeviceArray(data.data), data.t, data.N, data.N_batch)
 
+"""
+    NODEDataloader(batched_dataloader::SingleTrajectoryBatchedOSADataloader, N_length::Int)
+
+Derives a regular [`NODEDataloader`](@ref) from a `batched_dataloader`.
+"""
 function NODEDataloader(batched_dataloader::SingleTrajectoryBatchedOSADataloader, N_length::Int)
     trajectory = get_trajectory(batched_dataloader, batched_dataloader.N_batch*batched_dataloader.N + 1; N_batch=0)
 
     NODEDataloader(trajectory[2], trajectory[1], N_length; valid_set=nothing)
 end 
 
+"""
+    NODEDataloader_insertdim(batched_dataloader::SingleTrajectoryBatchedOSADataloader, N_length::Int)
+
+Derives a regular [`NODEDataloader`](@ref) from a `batched_dataloader`, but inserts a singleton dimension as the penultimate dimension, so that it can be used with models that have `N_batch==1`
+"""
 function NODEDataloader_insertdim(batched_dataloader::SingleTrajectoryBatchedOSADataloader, N_length::Int)
     trajectory = get_trajectory(batched_dataloader, batched_dataloader.N_batch*batched_dataloader.N + 1; N_batch=0)
     size_t = size(trajectory[2])
