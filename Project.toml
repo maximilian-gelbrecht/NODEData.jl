@@ -1,7 +1,7 @@
 name = "NODEData"
 uuid = "56c15bac-5c7d-45b6-b0e6-74117a5d8120"
 authors = ["Maximilian Gelbrecht <maximilian.gelbrecht@posteo.de> and contributors"]
-version = "0.3.2"
+version = "0.4.0"
 
 [deps]
 CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
@@ -12,7 +12,6 @@ SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [extras]
-CPUSummary = "2a0fbf3d-bb9c-48f3-b0a9-814d99fd7ab9"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]

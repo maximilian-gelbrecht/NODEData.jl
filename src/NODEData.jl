@@ -8,7 +8,7 @@ using CUDA
 function __init__() # automatically called at runtime to set cuda_used
     cuda_used[] = false
 end
-DeviceArray(x::AbstractArray) = cuda_used[] ? CuArray(x) : Array(x)
+DeviceArray(x) = cuda_used[] ? CuArray(x) : Array(x)
 DeviceArrayType() = cuda_used[] ? CuArray : Array
 
 """
