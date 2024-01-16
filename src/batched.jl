@@ -71,7 +71,7 @@ function SingleTrajectoryBatchedOSADataloader(data::AbstractArray{T,N}, t::Abstr
         N_t_valid = Int(floor(valid_set*N_t))
         N_t_train = N_t - N_t_valid
 
-        return SingleTrajectoryBatchedOSADataloader(_prepare_singletrajectory_batched(data[..,1:N_t_train], t[1:N_t_train], N_batch)..., N_batch), SingleTrajectoryBatchedOSADataloader(_prepare_singletrajectory_batched(data[..,N_t_train+1:end], t[N_t_train+1:end], N_batch)..., N_batch)
+        return SingleTrajectoryBatchedOSADataloader(_prepare_singletrajectory_batched(data[..,1:N_t_train], t[1:N_t_train], N_batch)..., N_batch), SingleTrajectoryBatchedOSADataloader(_prepare_singletrajectory_batched(data[..,N_t_train+1:N_t], t[N_t_train+1:N_t], N_batch)..., N_batch)
     end
 end
 

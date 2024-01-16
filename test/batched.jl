@@ -14,6 +14,10 @@
     train, valid = NODEData.MultiTrajectoryBatchedNODEDataloader(trajectories, 3, valid_set=0.5)
 
     @test typeof(valid[1][2]) <: AbstractArray 
+    @test train[1][1] == [1, 2, 3]
+    @test train[end][1] == [18, 19, 20]
+    @test valid[1][1] == [21, 22, 23]
+    @test valid[end][1] == [38, 39, 40]
 
     # single_trajectory_from_batched
     traj = NODEData.single_trajectory_from_batched(train,10)
