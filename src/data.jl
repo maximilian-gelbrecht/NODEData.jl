@@ -63,6 +63,7 @@ function NODEDataloader(data::AbstractArray{T,N}, t::AbstractArray{U,1}, N_lengt
 end 
 
 NODEDataloader(data::NODEDataloader, N_length::Integer) = NODEDataloader(data.data, data.t, N_length)
+remake_dataloader(data::NODEDataloader, N_length::Integer) = NODEDataloader(data, N_length)
 
 function Base.getindex(iter::NODEDataloader{T,U,N}, i::Integer) where {T,U,N}
     @assert 0 < i <= iter.N

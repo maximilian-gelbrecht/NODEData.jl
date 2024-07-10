@@ -72,4 +72,28 @@ end
     @test recovered_batched[1] == train[1]
     @test recovered_batched[end] == train[end]
     @test length(recovered_batched) == length(train)
+
+    # longer dataloaders 
+    train = NODEData.SingleTrajectoryBatchedOSADataloader(x, t, 5; N_length=3)
+
+    @test train[1][1][1,:] == 1:3 
+    @test train[1][1][2,:] == 2:4 
+    @test train[2][1][1,:] == 6:8
+    @test train[end][1][end,:] == 45:47 
+
+    @test train[1][2][:,:,1,1:3] == x[:,:,1:3]
+    @test train[1][2][:,:,2,1:3] == x[:,:,2:4]
+    @test train[2][2][:,:,1,1:3] == x[:,:,6:8]
+    @test train[end][2][:,:,end,:] == x[:,:,45:47]
+
+    # other base functions ;
+    @test length(train) == 9
+
+    # remake_dataloader 
+    train = remake_dataloader(train, 4)
+    @test train[1][1][1,:] == 1:4 
+    @test train[1][1][2,:] == 2:5 
+    @test train[2][1][1,:] == 6:9
+
+    @test train[1][2][:,:,1,1:4] == x[:,:,1:4]
 end

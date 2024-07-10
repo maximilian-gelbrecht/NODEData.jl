@@ -46,6 +46,7 @@ struct SingleTrajectoryBatchedOSADataloader{T<:AbstractArray,U<:AbstractVector,N
     t::U
     N::N
     N_batch::N
+    N_length::N
 end 
 
 """
@@ -58,12 +59,12 @@ Prepares a single trajectory batches one-step-ahead dataloader. When indexed it 
 * `data`: Trajectory (N_dims .... x N_t)
 * `t`: time steps of the trajectory 
 """
-function SingleTrajectoryBatchedOSADataloader(data::AbstractArray{T,N}, t::AbstractArray{U,1}, N_batch::Int=1; valid_set=nothing, GPU::Union{Bool, Nothing}=nothing) where {T,U,N} 
+function SingleTrajectoryBatchedOSADataloader(data::AbstractArray{T,N}, t::AbstractArray{U,1}, N_batch::Int=1; N_length::Integer=2, valid_set=nothing, GPU::Union{Bool, Nothing}=nothing) where {T,U,N} 
 
     set_gpu(typeof(data) <: CuArray ? true : false, GPU)
 
     if isnothing(valid_set)
-        return SingleTrajectoryBatchedOSADataloader(_prepare_singletrajectory_batched(data, t, N_batch)..., N_batch)
+        return SingleTrajectoryBatchedOSADataloader(_prepare_singletrajectory_batched(data, t, N_batch, N_length)..., N_batch, N_length)
     else 
         @assert 0 <= valid_set < 1 "Valid_set should be ∈ [0,1]"
 
@@ -71,13 +72,13 @@ function SingleTrajectoryBatchedOSADataloader(data::AbstractArray{T,N}, t::Abstr
         N_t_valid = Int(floor(valid_set*N_t))
         N_t_train = N_t - N_t_valid
 
-        return SingleTrajectoryBatchedOSADataloader(_prepare_singletrajectory_batched(data[..,1:N_t_train], t[1:N_t_train], N_batch)..., N_batch), SingleTrajectoryBatchedOSADataloader(_prepare_singletrajectory_batched(data[..,N_t_train+1:N_t], t[N_t_train+1:N_t], N_batch)..., N_batch)
+        return SingleTrajectoryBatchedOSADataloader(_prepare_singletrajectory_batched(data[..,1:N_t_train], t[1:N_t_train], N_batch, N_length)..., N_batch, N_length), SingleTrajectoryBatchedOSADataloader(_prepare_singletrajectory_batched(data[..,N_t_train+1:N_t], t[N_t_train+1:N_t], N_batch, N_length)..., N_batch, N_length)
     end
 end
 
-function _prepare_singletrajectory_batched(data::AbstractArray{T,N}, t::AbstractArray{U,1}, N_batch::Int=1) where {T,U,N}
+function _prepare_singletrajectory_batched(data::AbstractArray{T,N}, t::AbstractArray{U,1}, N_batch::Int=1, N_length::Int=2) where {T,U,N}
 
-    N_N = div(length(t)-1, N_batch)
+    N_N = div(length(t) - (N_length-1), N_batch)
     if (length(t)-1) % N_batch != 0
         @warn "Not all data points are used, N_batch is not a divisor of the length of the trajectory"
     end
@@ -87,13 +88,13 @@ function _prepare_singletrajectory_batched(data::AbstractArray{T,N}, t::Abstract
     batched_t = Array{Array{T,2}}(undef, N_N)
     
     i = 0
-    for i_t=1:N_batch:(length(t)-N_batch)
+    for i_t=1:N_batch:(length(t)-N_batch-(N_length-2))
         i += 1 
         # x
-        batched_x[i] = DeviceArray(cat([insert_dim(data[..,i_t+i_b:i_t+i_b+1], ndims(data)) for i_b=0:(N_batch-1)]..., dims=ndims(data)))
+        batched_x[i] = DeviceArray(cat([insert_dim(data[..,i_t+i_b:i_t+i_b+(N_length-1)], ndims(data)) for i_b=0:(N_batch-1)]..., dims=ndims(data)))
         
         # t
-        batched_t[i] = Array(cat([insert_dim(t[i_t+i_b:i_t+i_b+1],1) for i_b=0:(N_batch-1)]..., dims=1))      
+        batched_t[i] = Array(cat([insert_dim(t[i_t+i_b:i_t+i_b+(N_length-1)],1) for i_b=0:(N_batch-1)]..., dims=1))      
     end
         
     return (batched_x, batched_t, N_N)
@@ -140,8 +141,14 @@ function get_trajectory(data::NODEData.SingleTrajectoryBatchedOSADataloader, N; 
     end 
 end 
 
-cpu(data::SingleTrajectoryBatchedOSADataloader) = SingleTrajectoryBatchedOSADataloader(Array(data.data), data.t, data.N, data.N_batch)
-gpu(data::SingleTrajectoryBatchedOSADataloader) = SingleTrajectoryBatchedOSADataloader(DeviceArray(data.data), data.t, data.N, data.N_batch)
+function remake_dataloader(data::SingleTrajectoryBatchedOSADataloader, N::Integer)
+    trajectory = get_trajectory(data, data.N_batch*data.N + 1; N_batch=0)
+
+    SingleTrajectoryBatchedOSADataloader(trajectory[2], trajectory[1], data.N_batch, N_length=N)
+end
+
+cpu(data::SingleTrajectoryBatchedOSADataloader) = SingleTrajectoryBatchedOSADataloader(Array(data.data), data.t, data.N, data.N_batch, data.N_length)
+gpu(data::SingleTrajectoryBatchedOSADataloader) = SingleTrajectoryBatchedOSADataloader(DeviceArray(data.data), data.t, data.N, data.N_batch, data.N_length)
 
 """
     NODEDataloader(batched_dataloader::SingleTrajectoryBatchedOSADataloader, N_length::Int)
