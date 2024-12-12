@@ -1,7 +1,7 @@
 name = "NODEData"
 uuid = "56c15bac-5c7d-45b6-b0e6-74117a5d8120"
 authors = ["Maximilian Gelbrecht <maximilian.gelbrecht@posteo.de> and contributors"]
-version = "0.4.3"
+version = "0.4.4"
 
 [deps]
 CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"

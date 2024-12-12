@@ -96,4 +96,13 @@ end
     @test train[2][1][1,:] == 6:9
 
     @test train[1][2][:,:,1,1:4] == x[:,:,1:4]
+
+    t = 1:101
+    x = rand(5,5,101)
+
+    train2, valid2, test2 = NODEData.SingleTrajectoryBatchedOSADataloader(x, t, 5; valid_set=0.25, test_set=0.25, N_length=3)
+    train, valid= NODEData.SingleTrajectoryBatchedOSADataloader(x, t, 5; valid_set=0.5, N_length=3)
+
+    @test test2[end] == valid[end]
+    @test valid2[1] == valid[1]
 end

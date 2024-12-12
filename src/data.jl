@@ -29,7 +29,7 @@ struct NODEDataloader{T<:AbstractArray,U<:AbstractVector,N<:Integer} <: Abstract
     N_length::N
 end
 
-function NODEDataloader(sol::Union{SciMLBase.AbstractTimeseriesSolution, SciMLBase.AbstractDiffEqArray}, N_length::Integer; dt=nothing, valid_set=nothing, GPU::Union{Bool, Nothing}=nothing)
+function NODEDataloader(sol::Union{SciMLBase.AbstractTimeseriesSolution, SciMLBase.AbstractDiffEqArray}, N_length::Integer; dt=nothing, GPU::Union{Bool, Nothing}=nothing, kwargs...)
 
     set_gpu(detect_sol_array_type(sol), GPU)
 
@@ -41,24 +41,47 @@ function NODEDataloader(sol::Union{SciMLBase.AbstractTimeseriesSolution, SciMLBa
         data = DeviceArray(sol(t))
     end
 
-    NODEDataloader(data, t, N_length; valid_set=valid_set, GPU=GPU)
+    NODEDataloader(data, t, N_length; GPU=GPU, kwargs...)
 end
 
-function NODEDataloader(data::AbstractArray{T,N}, t::AbstractArray{U,1}, N_length::Integer; valid_set=nothing, GPU::Union{Bool, Nothing}=nothing) where {T,U,N} 
+function NODEDataloader(data::AbstractArray{T,N}, t::AbstractArray{U,1}, N_length::Integer; valid_set=nothing, test_set=nothing, GPU::Union{Bool, Nothing}=nothing) where {T,U,N} 
     @assert size(data)[end] == length(t) "Length of data and t should be equal"
     
     set_gpu(typeof(data) <: CuArray ? true : false, GPU)
 
-    if isnothing(valid_set)
+    if isnothing(valid_set) 
         return NODEDataloader(DeviceArray(data), Array(t), length(t) - N_length +1 , N_length)
     else 
-        @assert 0 <= valid_set < 1 "Valid_set should be ∈ [0,1]"
+        @assert 0 <= valid_set < 1 "valid_set should be ∈ [0,1]"
+        if !isnothing(test_set)
+             @assert 0 <= test_set < 1 "test_set should be ∈ [0,1]"
+             @assert test_set + valid_set < 1 "test_set + valid_set shoud be < 1"
+        end  
 
         N_t = length(t)
         N_t_valid = Int(floor(valid_set*N_t))
         N_t_train = N_t - N_t_valid
 
-        return NODEDataloader(DeviceArray(data[..,1:N_t_train]), Array(t[1:N_t_train]), N_t_train - N_length + 1, N_length), NODEDataloader(DeviceArray(data[..,N_t_train+1:N_t]), Array(t[N_t_train+1:N_t]), N_t_valid - N_length + 1, N_length)
+        if N_t_train - N_length + 1 <= 0 
+            @warn "Empty Training set"
+        end 
+
+        if  N_t_valid - N_length + 1 <= 0 
+            @warn "Empty Valid set, not enough data"
+        end
+
+        if isnothing(test_set)
+            return NODEDataloader(DeviceArray(data[..,1:N_t_train]), Array(t[1:N_t_train]), N_t_train - N_length + 1, N_length), NODEDataloader(DeviceArray(data[..,N_t_train+1:N_t]), Array(t[N_t_train+1:N_t]), N_t_valid - N_length + 1, N_length)
+        else 
+            N_t_test = Int(floor(test_set*N_t))
+            N_t_train = N_t - N_t_valid - N_t_test
+
+            if  N_t_test - N_length + 1 <= 0 
+                @warn "Empty test set, not enough data"
+            end
+
+            return NODEDataloader(DeviceArray(data[..,1:N_t_train]), Array(t[1:N_t_train]), N_t_train - N_length + 1, N_length), NODEDataloader(DeviceArray(data[..,N_t_train+1:N_t_train+N_t_valid]), Array(t[N_t_train+1:N_t_train+N_t_valid]), N_t_valid - N_length + 1, N_length), NODEDataloader(DeviceArray(data[..,N_t_train+N_t_valid+1:N_t]), Array(t[N_t_train+N_t_valid+1:N_t]), N_t_test - N_length + 1, N_length)
+        end 
     end
 end 
 

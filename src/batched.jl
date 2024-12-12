@@ -59,7 +59,7 @@ Prepares a single trajectory batches one-step-ahead dataloader. When indexed it 
 * `data`: Trajectory (N_dims .... x N_t)
 * `t`: time steps of the trajectory 
 """
-function SingleTrajectoryBatchedOSADataloader(data::AbstractArray{T,N}, t::AbstractArray{U,1}, N_batch::Int=1; N_length::Integer=2, valid_set=nothing, GPU::Union{Bool, Nothing}=nothing) where {T,U,N} 
+function SingleTrajectoryBatchedOSADataloader(data::AbstractArray{T,N}, t::AbstractArray{U,1}, N_batch::Int=1; N_length::Integer=2, valid_set=nothing, test_set=nothing, GPU::Union{Bool, Nothing}=nothing) where {T,U,N} 
 
     set_gpu(typeof(data) <: CuArray ? true : false, GPU)
 
@@ -67,12 +67,35 @@ function SingleTrajectoryBatchedOSADataloader(data::AbstractArray{T,N}, t::Abstr
         return SingleTrajectoryBatchedOSADataloader(_prepare_singletrajectory_batched(data, t, N_batch, N_length)..., N_batch, N_length)
     else 
         @assert 0 <= valid_set < 1 "Valid_set should be ∈ [0,1]"
+        if !isnothing(test_set)
+            @assert 0 <= test_set < 1 "test_set should be ∈ [0,1]"
+            @assert test_set + valid_set < 1 "test_set + valid_set shoud be < 1"
+        end 
 
         N_t = length(t)
         N_t_valid = Int(floor(valid_set*N_t))
         N_t_train = N_t - N_t_valid
 
-        return SingleTrajectoryBatchedOSADataloader(_prepare_singletrajectory_batched(data[..,1:N_t_train], t[1:N_t_train], N_batch, N_length)..., N_batch, N_length), SingleTrajectoryBatchedOSADataloader(_prepare_singletrajectory_batched(data[..,N_t_train+1:N_t], t[N_t_train+1:N_t], N_batch, N_length)..., N_batch, N_length)
+        if N_t_train - N_length + 1 <= 0 
+            @warn "Empty Training set"
+        end 
+
+        if  N_t_valid - N_length + 1 <= 0 
+            @warn "Empty Valid set, not enough data"
+        end
+
+        if isnothing(test_set)
+            return SingleTrajectoryBatchedOSADataloader(_prepare_singletrajectory_batched(data[..,1:N_t_train], t[1:N_t_train], N_batch, N_length)..., N_batch, N_length), SingleTrajectoryBatchedOSADataloader(_prepare_singletrajectory_batched(data[..,N_t_train+1:N_t], t[N_t_train+1:N_t], N_batch, N_length)..., N_batch, N_length)
+        else 
+            N_t_test = Int(floor(test_set*N_t))
+            N_t_train = N_t - N_t_valid - N_t_test
+
+            if  N_t_test - N_length + 1 <= 0 
+                @warn "Empty test set, not enough data"
+            end
+
+            return SingleTrajectoryBatchedOSADataloader(_prepare_singletrajectory_batched(data[..,1:N_t_train], t[1:N_t_train], N_batch, N_length)..., N_batch, N_length), SingleTrajectoryBatchedOSADataloader(_prepare_singletrajectory_batched(data[..,N_t_train+1:N_t_train+N_t_valid], t[N_t_train+1:N_t_train+N_t_valid], N_batch, N_length)..., N_batch, N_length), SingleTrajectoryBatchedOSADataloader(_prepare_singletrajectory_batched(data[..,N_t_train+N_t_valid+1:N_t], t[N_t_train+N_t_valid+1:N_t], N_batch, N_length)..., N_batch, N_length)
+        end 
     end
 end
 
